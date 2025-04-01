@@ -8,7 +8,7 @@
 import UIKit
 
 protocol TrackerCellDelegate: AnyObject {
-    func didTapDoneButton(isComplted: Bool, trackerId: UUID)
+    func didTapDoneButton(isCompleted: Bool, trackerId: UUID)
 }
 
 final class TrackerCell: UICollectionViewCell {
@@ -28,14 +28,14 @@ final class TrackerCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
- 
+        
         
         cardView.translatesAutoresizingMaskIntoConstraints = false
         cardView.layer.cornerRadius = 16
         
         circleView.translatesAutoresizingMaskIntoConstraints = false
         circleView.layer.cornerRadius = 12
-
+        
         circleView.backgroundColor = .white.withAlphaComponent(0.3)
         
         emojiLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -63,7 +63,7 @@ final class TrackerCell: UICollectionViewCell {
             cardView.heightAnchor.constraint(equalToConstant: 90),
             cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-
+            
             circleView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
             circleView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             circleView.heightAnchor.constraint(equalToConstant: 24),
@@ -92,19 +92,18 @@ final class TrackerCell: UICollectionViewCell {
     
     @objc
     private func didTapDoneButton() {
-        if !isCompletable {
+        guard isCompletable,
+        let id else {
             return
         }
         
-        guard let id else {
-            return
-        }
+        
         
         isComplted = !isComplted
         let newButtonImage = isComplted ? UIImage(resource: .done) : UIImage(resource: .addTracker)
         doneButton.setImage(newButtonImage.withTintColor(.white), for: .normal)
         doneButton.alpha = isComplted ? 0.3 : 1
-        delegate?.didTapDoneButton(isComplted: isComplted, trackerId: id)
+        delegate?.didTapDoneButton(isCompleted: isComplted, trackerId: id)
         
     }
     

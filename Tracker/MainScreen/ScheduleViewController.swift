@@ -25,7 +25,7 @@ final class ScheduleViewController: UIViewController {
         setUp()
     }
     
-    func makeLabel() -> UILabel {
+    private func makeLabel() -> UILabel {
         let label = UILabel()
         label.text = "Расписание"
         label.font = .systemFont(ofSize: 16, weight: .medium)
@@ -33,7 +33,7 @@ final class ScheduleViewController: UIViewController {
         return label
     }
     
-    func makeButton() -> UIButton {
+    private func makeButton() -> UIButton {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Готово", for: .normal)
@@ -46,7 +46,7 @@ final class ScheduleViewController: UIViewController {
         return button
     }
     
-    func makeTableView() -> UITableView {
+    private func makeTableView() -> UITableView {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.isScrollEnabled = false
@@ -58,13 +58,13 @@ final class ScheduleViewController: UIViewController {
     }
     
     @objc
-    func didTapButton() {
+    private func didTapButton() {
         delegate?.setWeekdays(weekdays: selectedWeekdays)
         dismiss(animated: true)
     }
     
     
-    func setUp() {
+    private func setUp() {
         view.backgroundColor = .white
         let label = makeLabel()
         let button = makeButton()
@@ -91,7 +91,7 @@ final class ScheduleViewController: UIViewController {
 
 extension ScheduleViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return tableView.frame.height / 7
+        tableView.frame.height / 7
     }
 }
 
@@ -106,7 +106,7 @@ extension ScheduleViewController: UITableViewDataSource {
         switchView.addTarget(self, action: #selector(didSwitch(_:)), for: .valueChanged)
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell")
         cell?.selectionStyle = .none
-
+        
         cell?.backgroundColor = .systemGray6
         cell?.textLabel?.text = weekdays[indexPath.row]
         cell?.accessoryView = switchView
@@ -114,10 +114,10 @@ extension ScheduleViewController: UITableViewDataSource {
     }
     
     @objc
-    func didSwitch(_ sender: UISwitch) {
+    private func didSwitch(_ sender: UISwitch) {
         if let cell = sender.superview as? UITableViewCell,
-           let IndexPath = tableView.indexPath(for: cell) {
-            let day = weekdays[IndexPath.row]
+           let indexPath = tableView.indexPath(for: cell) {
+            let day = weekdays[indexPath.row]
             
             if sender.isOn {
                 if let weekday = Weekday(rawValue: day) {
@@ -134,12 +134,12 @@ extension ScheduleViewController: UITableViewDataSource {
         }
     }
 }
-    enum Weekday: String, CaseIterable {
-        case Sunday = "Воскресенье"
-        case Monday = "Понедельник"
-        case Tuesday = "Вторник"
-        case Wednesday = "Среда"
-        case Thursday = "Четверг"
-        case Friday = "Пятница"
-        case Saturday = "Суббота"
-    }
+enum Weekday: String, CaseIterable {
+    case sunday = "Воскресенье"
+    case monday = "Понедельник"
+    case tuesday = "Вторник"
+    case wednesday = "Среда"
+    case thursday = "Четверг"
+    case friday = "Пятница"
+    case saturday = "Суббота"
+}

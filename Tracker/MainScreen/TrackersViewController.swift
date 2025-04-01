@@ -7,7 +7,7 @@
 
 import UIKit
 
-class TrackersViewController: UIViewController, TrackerSettingsViewControllerDelegate {
+final class TrackersViewController: UIViewController, TrackerSettingsViewControllerDelegate {
     
     private let collection = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
     let datePicker = UIDatePicker()
@@ -200,8 +200,8 @@ class TrackersViewController: UIViewController, TrackerSettingsViewControllerDel
 
 extension TrackersViewController: UICollectionViewDataSource, TrackerCellDelegate {
     
-    func didTapDoneButton(isComplted: Bool, trackerId: UUID) {
-        if isComplted {
+    func didTapDoneButton(isCompleted: Bool, trackerId: UUID) {
+        if isCompleted {
             completedTrackers.append(TrackerRecord(id: trackerId, date: currentDate))
         } else {
             completedTrackers.removeAll { $0.date == currentDate && $0.id == trackerId}
@@ -227,11 +227,7 @@ extension TrackersViewController: UICollectionViewDataSource, TrackerCellDelegat
         cell.delegate = self
         
         let isBefore = Calendar.current.compare(Date(), to: currentDate, toGranularity: .day)
-        if isBefore == .orderedAscending {
-            cell.isCompletable = false
-        } else {
-            cell.isCompletable = true
-        }
+        cell.isCompletable = isBefore != .orderedAscending
         
         cell.cardView.backgroundColor = tracker.color
         
@@ -248,48 +244,27 @@ extension TrackersViewController: UICollectionViewDataSource, TrackerCellDelegat
         let numberOfDays = completedTrackers.count { $0.id == tracker.id }
         
         cell.daysLabel.text = setDaysLabel(numberOfDays: numberOfDays)
-
+        
         return cell
     }
     
-    func isTrackerCompleted(trackerId: UUID) -> Bool {
-        for completedTracker in completedTrackers {
-            if completedTracker.id == trackerId {
-                if completedTracker.date == currentDate {
-                    return true
-                }
-            }
-        }
-        return false
+    private func isTrackerCompleted(trackerId: UUID) -> Bool {
+        completedTrackers.contains { $0.id == trackerId && $0.date == currentDate }
     }
     
     private func setDaysLabel(numberOfDays: Int) -> String {
-        let nums = [2, 3, 4]
-        if numberOfDays == 0 {
+        let lastDigit = numberOfDays % 10
+        let lastTwoDigits = numberOfDays % 100
+        
+        if numberOfDays == 0 || (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+            return "\(numberOfDays) дней"
+        } else if lastDigit == 1 {
+            return "\(numberOfDays) день"
+        } else if (2...4).contains(lastDigit) {
+            return "\(numberOfDays) дня"
+        } else {
             return "\(numberOfDays) дней"
         }
-        
-        if numberOfDays == 1 {
-            return "\(numberOfDays) день"
-        }
-        
-        if numberOfDays < 5 {
-            return "\(numberOfDays) дня"
-        }
-        
-        if numberOfDays < 21 {
-            return "\(numberOfDays) дней"
-        }
-        
-        if numberOfDays % 10 == 1 {
-            return "\(numberOfDays) день"
-        }
-        
-        if nums.contains(numberOfDays % 10) {
-            return "\(numberOfDays) дня"
-        }
-        
-        return "\(numberOfDays) дней"
     }
 }
 

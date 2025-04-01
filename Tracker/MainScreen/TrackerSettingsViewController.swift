@@ -21,6 +21,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
     
     weak var delegate: TrackerSettingsViewControllerDelegate?
     var trackerType: TrackerTypes?
+    
     private var selectedWeekdays: [Weekday]?
     private let textField = UITextField()
     private let button = UIButton()
@@ -36,7 +37,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         setUp()
     }
     
-    func makeTitleLabel(text: String) -> UILabel {
+    private func makeTitleLabel(text: String) -> UILabel {
         let label = UILabel()
         label.text = text
         label.font = .systemFont(ofSize: 16, weight: .medium)
@@ -44,7 +45,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         return label
     }
     
-    func makeTextField() -> UITextField {
+    private func makeTextField() -> UITextField {
         textField.backgroundColor = .systemGray6
         textField.layer.cornerRadius = 16
         textField.placeholder = "Введите название трекера"
@@ -62,7 +63,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         return true
     }
     
-    func makeCreateButton() -> UIButton {
+    private func makeCreateButton() -> UIButton {
         guard let trackerType else {
             assertionFailure("no tracker type")
             return button
@@ -76,7 +77,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         return button
     }
     
-    func makeCancelButton() -> UIButton {
+    private func makeCancelButton() -> UIButton {
         let button = UIButton()
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.red.cgColor
@@ -91,7 +92,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         return button
     }
     
-    func makeTableView() -> UITableView {
+    private func makeTableView() -> UITableView {
         let tableView = UITableView()
         tableView.dataSource = self
         tableView.delegate = self
@@ -100,16 +101,12 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.layer.cornerRadius = 16
-        if trackerType == TrackerTypes.habit {
-            tableView.heightAnchor.constraint(equalToConstant: 150).isActive = true
-        } else {
-            tableView.heightAnchor.constraint(equalToConstant: 75).isActive = true
-        }
+        tableView.heightAnchor.constraint(equalToConstant: trackerType == TrackerTypes.habit ? 150 : 75).isActive = true
         return tableView
     }
     
     @objc
-    func didTapCreateButton() {
+    private func didTapCreateButton() {
         guard let trackerType else {
             assertionFailure("no tracekr type")
             return
@@ -143,12 +140,12 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
     }
     
     @objc
-    func didTapCancelButton() {
+    private func didTapCancelButton() {
         self.dismiss(animated: true)
     }
     
     @objc
-    func didEditTextField() {
+    private func didEditTextField() {
         clearButton.isHidden = textField.text?.isEmpty ?? true
     }
     
@@ -158,7 +155,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         clearButton.isHidden = true
     }
     
-    func setUp() {
+    private func setUp() {
         view.backgroundColor = .white
         let label = makeTitleLabel(text: trackerType?.rawValue ?? "")
         let textField = makeTextField()
@@ -197,11 +194,8 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
 extension TrackerSettingsViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard let trackerType else { return 1 }
-        if trackerType.rawValue == TrackerTypes.habit.rawValue {
-            return 2
-        } else {
-            return 1
-        }
+        
+        return trackerType.rawValue == TrackerTypes.habit.rawValue ? 2 : 1
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -212,11 +206,8 @@ extension TrackerSettingsViewController: UITableViewDataSource {
         cell?.selectionStyle = .none
         cell?.contentView.backgroundColor = .systemGray6
         cell?.contentView.addSubview(image)
-        if indexPath.row == 0 {
-            cell?.textLabel?.text = "Категория"
-        } else {
-            cell?.textLabel?.text = "Расписание"
-        }
+        cell?.textLabel?.text = indexPath.row == 0 ? "Категория" : "Расписание"
+        
         NSLayoutConstraint.activate([
             image.heightAnchor.constraint(equalToConstant: 24),
             image.widthAnchor.constraint(equalToConstant: 24),

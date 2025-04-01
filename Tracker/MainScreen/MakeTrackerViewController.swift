@@ -19,7 +19,7 @@ final class MakeTrackerViewController: UIViewController {
     }
     
     
-    func setUp() {
+    private func setUp() {
         let label = makeLabel()
         let habitButton = makeButton(text: "Привычка")
         let notHabitButton = makeButton(text: "Нерегулярное событие")
@@ -43,7 +43,7 @@ final class MakeTrackerViewController: UIViewController {
         ])
     }
     
-    func makeLabel() -> UILabel {
+    private func makeLabel() -> UILabel {
         let label = UILabel()
         label.text = "Создание трекера"
         label.font = .systemFont(ofSize: 16, weight: .medium)
@@ -51,7 +51,7 @@ final class MakeTrackerViewController: UIViewController {
         return label
     }
     
-    func makeButton(text: String) -> UIButton {
+    private func makeButton(text: String) -> UIButton {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle(text, for: .normal)
@@ -61,15 +61,15 @@ final class MakeTrackerViewController: UIViewController {
         button.layer.cornerRadius = 16
         
         if text == "Привычка" {
-            button.addTarget(self, action: #selector(self.didTapHabitButton), for: .touchUpInside)
+            button.addTarget(self, action: #selector(didTapHabitButton), for: .touchUpInside)
         } else {
-            button.addTarget(self, action: #selector(self.didTapNotHabitButton), for: .touchUpInside)
+            button.addTarget(self, action: #selector(didTapNotHabitButton), for: .touchUpInside)
         }
         return button
     }
     
     @objc
-    func didTapHabitButton() {
+    private func didTapHabitButton() {
         let trackerSettingsViewController = TrackerSettingsViewController()
         trackerSettingsViewController.trackerType = TrackerTypes.habit
         trackerSettingsViewController.delegate = trackersViewController
@@ -77,7 +77,7 @@ final class MakeTrackerViewController: UIViewController {
     }
     
     @objc
-    func didTapNotHabitButton() {
+    private func didTapNotHabitButton() {
         let trackerSettingsViewController = TrackerSettingsViewController()
         trackerSettingsViewController.trackerType = TrackerTypes.notRegular
         trackerSettingsViewController.delegate = trackersViewController
