@@ -12,6 +12,7 @@ final class TabBarController: UITabBarController {
         super.viewDidLoad()
         
         let trackersViewController = TrackersViewController()
+        let navigationViewController = UINavigationController(rootViewController: trackersViewController)
         let statisticsViewController = StatisticsViewController()
         
         statisticsViewController.tabBarItem = UITabBarItem(
@@ -26,9 +27,6 @@ final class TabBarController: UITabBarController {
             selectedImage: nil
         )
         
-        
-
-        
-        self.viewControllers = [trackersViewController, statisticsViewController]
+        self.viewControllers = [navigationViewController, statisticsViewController]
     }
 }
