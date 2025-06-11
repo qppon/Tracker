@@ -122,19 +122,17 @@ extension ScheduleViewController: UITableViewDataSource {
             if sender.isOn {
                 if let weekday = Weekday(rawValue: day) {
                     selectedWeekdays.append(weekday)
-                    print(selectedWeekdays)
                 }
             } else {
                 if let weekday = Weekday(rawValue: day),
                    let index = selectedWeekdays.firstIndex(of: weekday) {
                     selectedWeekdays.remove(at: index)
-                    print(selectedWeekdays)
                 }
             }
         }
     }
 }
-enum Weekday: String, CaseIterable {
+enum Weekday: String, CaseIterable, Encodable, Decodable {
     case sunday = "Воскресенье"
     case monday = "Понедельник"
     case tuesday = "Вторник"
