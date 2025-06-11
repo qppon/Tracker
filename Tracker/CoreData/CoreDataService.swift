@@ -7,7 +7,7 @@
 
 import CoreData
 
-class CoreDataService {
+final class CoreDataService {
     static let shared = CoreDataService()
     
     private init() {}
@@ -25,7 +25,7 @@ class CoreDataService {
         }
     }
     
-    func createCategory(name: String, context: NSManagedObjectContext) -> TrackerCategoryCD {
+    func createCategory(byName name: String, context: NSManagedObjectContext) -> TrackerCategoryCD {
         let newCategory = TrackerCategoryCD(context: context)
         newCategory.category = name
         return newCategory

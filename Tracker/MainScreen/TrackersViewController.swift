@@ -109,7 +109,6 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
             let category = category.category ?? "Без категории"
             return TrackerCategory(category: category, trackers: trackers)
         }
-        
     }
     
     func decodeCalendar(from data: Data?) -> [Weekday] {
@@ -248,7 +247,7 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
             if !(tracker.calendar?.isEmpty ?? true) {
                 if let trackerCalendar = tracker.calendar {
                     for trackerWeekday in trackerCalendar {
-                        if weekdays.firstIndex(of: trackerWeekday.rawValue)! == weekday {
+                        if weekdays.firstIndex(of: trackerWeekday.rawValue) ?? 0 == weekday {
                             newTrackers.append(tracker)
                         }
                     }
@@ -350,9 +349,11 @@ extension TrackersViewController: UICollectionViewDataSource, TrackerCellDelegat
 
 extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        let view = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "header", for: indexPath) as? SupplementaryView
-        view?.titleLabel.text = "Домашний уют"
-        return view!
+        guard let view = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "header", for: indexPath) as? SupplementaryView else {
+            return UICollectionReusableView()
+        }
+        view.titleLabel.text = "Домашний уют"
+        return view
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {

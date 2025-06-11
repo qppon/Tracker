@@ -115,7 +115,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.layer.cornerRadius = 16
-        tableView.heightAnchor.constraint(equalToConstant: trackerType == TrackerTypes.habit ? 150 : 75).isActive = true
+        tableView.heightAnchor.constraint(equalToConstant: trackerType == TrackerTypes.habit ? 149 : 74).isActive = true
         return tableView
     }
     
@@ -153,7 +153,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             category = CoreDataService.shared.fetchCategory(byName: categoryName, context: context)
             
             if category == nil {
-                category = CoreDataService.shared.createCategory(name: categoryName, context: context)
+                category = CoreDataService.shared.createCategory(byName: categoryName, context: context)
             }
         }
         let date = Date()
@@ -176,7 +176,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
                 print("[TrackerSettingsViewController]: Ошибка сохранения в CD \(error)")
                 return
             }
-            let tracker = Tracker(id: trackerCD.id!, name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: "❤️", calendar: nil, date: date)
+            let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: "❤️", calendar: nil, date: date)
             delegate?.addTracker(category: "Радостные мелочи", tracker: tracker)
             return
         }
@@ -210,7 +210,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             return
         }
         
-        let tracker = Tracker(id: trackerCD.id!, name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: selectedEmoji ?? "", calendar: selectedWeekdays, date: nil)
+        let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: selectedEmoji ?? "", calendar: selectedWeekdays, date: nil)
         delegate?.addTracker(category: "Радостные мелочи", tracker: tracker)
     }
     
@@ -324,10 +324,10 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             tableView.widthAnchor.constraint(equalToConstant: view.frame.width - 32),
             tableView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
-            emojiLabel.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 32),
+            emojiLabel.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 28),
             emojiLabel.widthAnchor.constraint(equalToConstant: 52),
             emojiLabel.heightAnchor.constraint(equalToConstant: 18),
-            emojiLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 28),
+            emojiLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 26),
             
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
@@ -338,14 +338,14 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             emojiCollection.widthAnchor.constraint(equalToConstant: view.frame.width - 36),
             emojiCollection.heightAnchor.constraint(equalToConstant: 200),
             emojiCollection.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            emojiCollection.topAnchor.constraint(equalTo: emojiLabel.bottomAnchor),
+            emojiCollection.topAnchor.constraint(equalTo: emojiLabel.bottomAnchor, constant: 4),
             
-            colorLabel.topAnchor.constraint(equalTo: emojiCollection.bottomAnchor, constant: 16),
+            colorLabel.topAnchor.constraint(equalTo: emojiCollection.bottomAnchor, constant: 8),
             colorLabel.widthAnchor.constraint(equalToConstant: 52),
             colorLabel.heightAnchor.constraint(equalToConstant: 18),
-            colorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 28),
+            colorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 26),
             
-            colorCollection.topAnchor.constraint(equalTo: colorLabel.bottomAnchor),
+            colorCollection.topAnchor.constraint(equalTo: colorLabel.bottomAnchor, constant: 4),
             colorCollection.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             colorCollection.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             colorCollection.heightAnchor.constraint(equalToConstant: 200),
@@ -375,19 +375,22 @@ extension TrackerSettingsViewController: UITableViewDataSource {
         let image = UIImageView(image: .arrow)
         image.translatesAutoresizingMaskIntoConstraints = false
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell")
-        cell?.selectionStyle = .none
-        cell?.contentView.backgroundColor = .systemGray6
-        cell?.contentView.addSubview(image)
-        cell?.textLabel?.text = indexPath.row == 0 ? "Категория" : "Расписание"
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") else {
+            return UITableViewCell()
+        }
+        cell.selectionStyle = .none
+        cell.contentView.backgroundColor = .systemGray6
+        cell.contentView.addSubview(image)
+        cell.textLabel?.text = indexPath.row == 0 ? "Категория" : "Расписание"
+        cell.separatorInset = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
         
         NSLayoutConstraint.activate([
             image.heightAnchor.constraint(equalToConstant: 24),
             image.widthAnchor.constraint(equalToConstant: 24),
-            image.trailingAnchor.constraint(equalTo: cell!.contentView.trailingAnchor, constant: -16),
-            image.centerYAnchor.constraint(equalTo: cell!.centerYAnchor)
+            image.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -16),
+            image.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
         ])
-        return cell!
+        return cell
     }
 }
 

@@ -104,13 +104,15 @@ extension ScheduleViewController: UITableViewDataSource {
         let switchView = UISwitch()
         switchView.translatesAutoresizingMaskIntoConstraints = false
         switchView.addTarget(self, action: #selector(didSwitch(_:)), for: .valueChanged)
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell")
-        cell?.selectionStyle = .none
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") else {
+            return UITableViewCell()
+        }
+        cell.selectionStyle = .none
         
-        cell?.backgroundColor = .systemGray6
-        cell?.textLabel?.text = weekdays[indexPath.row]
-        cell?.accessoryView = switchView
-        return cell!
+        cell.backgroundColor = .systemGray6
+        cell.textLabel?.text = weekdays[indexPath.row]
+        cell.accessoryView = switchView
+        return cell
     }
     
     @objc

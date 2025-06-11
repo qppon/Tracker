@@ -10,18 +10,43 @@ import CoreData
 
 final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     
+    // MARK: - Singleton
+    
     static let shared = TrackerCategoryStore(context: PersistenceController.shared.context)
+    
+    // MARK: - Properties
     
     private let context: NSManagedObjectContext
     private var fetchedResultsController: NSFetchedResultsController<TrackerCategoryCD>!
     
     var onUpdate: (() -> Void)?
     
+    // MARK: - Init
+    
     init(context: NSManagedObjectContext) {
         self.context = context
         super.init()
         setupFetchedResultsController()
     }
+    
+    // MARK: - Public Methods
+    
+    func fetchCategories() -> [TrackerCategoryCD] {
+        return fetchedResultsController.fetchedObjects ?? []
+    }
+    
+    func fetchCategory(byTitle category: String) -> TrackerCategoryCD? {
+        return fetchedResultsController.fetchedObjects?.first(where: { $0.category == category })
+    }
+    
+    func saveCategory(category: String) -> TrackerCategoryCD {
+        let trackerCategory = TrackerCategoryCD(context: context)
+        trackerCategory.category = category
+        saveContext()
+        return trackerCategory
+    }
+    
+    // MARK: - Private Methods
     
     private func setupFetchedResultsController() {
         let fetchRequest: NSFetchRequest<TrackerCategoryCD> = TrackerCategoryCD.fetchRequest()
@@ -43,21 +68,6 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         }
     }
     
-    func fetchCategories() -> [TrackerCategoryCD] {
-        return fetchedResultsController.fetchedObjects ?? []
-    }
-    
-    func fetchCategory(byTitle category: String) -> TrackerCategoryCD? {
-        return fetchedResultsController.fetchedObjects?.first(where: { $0.category == category })
-    }
-    
-    func saveCategory(category: String) -> TrackerCategoryCD {
-        let trackerCategory = TrackerCategoryCD(context: context)
-        trackerCategory.category = category
-        saveContext()
-        return trackerCategory
-    }
-    
     private func saveContext() {
         do {
             try context.save()
@@ -65,6 +75,8 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
             print("Ошибка при сохранении категории: \(error)")
         }
     }
+    
+    // MARK: - NSFetchedResultsControllerDelegate
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         onUpdate?()

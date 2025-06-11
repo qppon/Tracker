@@ -64,7 +64,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     func deleteRecord(completedTracker: TrackerRecord) {
-        guard let completedTrackerCD = completedTrackers.first(where: { $0.id == completedTracker.id && Calendar.current.compare($0.date!, to: completedTracker.date, toGranularity: .day)  == .orderedSame }) else {
+        guard let completedTrackerCD = completedTrackers.first(where: { $0.id == completedTracker.id && Calendar.current.compare($0.date ?? Date(), to: completedTracker.date, toGranularity: .day)  == .orderedSame }) else {
             print("[TrackerRecordStore]: Запись не удалена")
             return
         }
