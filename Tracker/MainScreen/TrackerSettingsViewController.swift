@@ -85,7 +85,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         button.addTarget(self, action: #selector(self.didTapCreateButton), for: .touchUpInside)
         button.setTitle("Создать", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = trackerType.rawValue ==  TrackerTypes.habit.rawValue ? .gray : .colorSelection1
+        button.backgroundColor = .gray
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
