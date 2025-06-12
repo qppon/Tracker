@@ -104,13 +104,15 @@ extension ScheduleViewController: UITableViewDataSource {
         let switchView = UISwitch()
         switchView.translatesAutoresizingMaskIntoConstraints = false
         switchView.addTarget(self, action: #selector(didSwitch(_:)), for: .valueChanged)
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell")
-        cell?.selectionStyle = .none
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") else {
+            return UITableViewCell()
+        }
+        cell.selectionStyle = .none
         
-        cell?.backgroundColor = .systemGray6
-        cell?.textLabel?.text = weekdays[indexPath.row]
-        cell?.accessoryView = switchView
-        return cell!
+        cell.backgroundColor = .systemGray6
+        cell.textLabel?.text = weekdays[indexPath.row]
+        cell.accessoryView = switchView
+        return cell
     }
     
     @objc
@@ -122,19 +124,17 @@ extension ScheduleViewController: UITableViewDataSource {
             if sender.isOn {
                 if let weekday = Weekday(rawValue: day) {
                     selectedWeekdays.append(weekday)
-                    print(selectedWeekdays)
                 }
             } else {
                 if let weekday = Weekday(rawValue: day),
                    let index = selectedWeekdays.firstIndex(of: weekday) {
                     selectedWeekdays.remove(at: index)
-                    print(selectedWeekdays)
                 }
             }
         }
     }
 }
-enum Weekday: String, CaseIterable {
+enum Weekday: String, CaseIterable, Encodable, Decodable {
     case sunday = "Воскресенье"
     case monday = "Понедельник"
     case tuesday = "Вторник"
