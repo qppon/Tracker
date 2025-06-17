@@ -39,11 +39,29 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         return fetchedResultsController.fetchedObjects?.first(where: { $0.category == category })
     }
     
-    func saveCategory(category: String) -> TrackerCategoryCD {
+    func saveCategory(category: String) {
         let trackerCategory = TrackerCategoryCD(context: context)
         trackerCategory.category = category
+        trackerCategory.trackers = []
         saveContext()
-        return trackerCategory
+    }
+    
+    func deleteCategory(categoryName: String) {
+        guard let trackerCategory = CoreDataService.shared.fetchCategory(byName: categoryName, context: context) else {
+            print("[TrackerCategoryStore]: ошибка в deleteCategory")
+            return
+        }
+        context.delete(trackerCategory)
+        saveContext()
+    }
+    
+    func updateCategory(categoryName: String, newCategoryName: String) {
+        guard let trackerCategory = CoreDataService.shared.fetchCategory(byName: categoryName, context: context) else {
+            print("[TrackerCategoryStore]: ошибка в updateCategory")
+            return
+        }
+        trackerCategory.category = newCategoryName
+        saveContext()
     }
     
     // MARK: - Private Methods

@@ -10,12 +10,22 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
+    private let skipOnboarding = "skip onboarding"
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = TabBarController()
+        
+        if UserDefaults.standard.bool(forKey: skipOnboarding) {
+            window?.rootViewController = TabBarController()
+        } else {
+            let onboardingViewController = OnboardingViewController(transitionStyle: .scroll, navigationOrientation: .horizontal)
+            window?.rootViewController = onboardingViewController
+            onboardingViewController.onFinish = {
+                UserDefaults.standard.set(true, forKey: self.skipOnboarding)
+                self.window?.rootViewController = TabBarController()
+            }
+        }
         window?.makeKeyAndVisible()
     }
 
@@ -47,7 +57,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
 
         // Save changes in the application's managed object context when the application transitions to the background.
-        (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
+//        (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
     }
 
 

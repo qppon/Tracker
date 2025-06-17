@@ -19,7 +19,7 @@ enum TrackerTypes: String {
 final class TrackerSettingsViewController: UIViewController, ScheduleViewControllerDelegate, UITextFieldDelegate {
     
     
-    
+    let tableView = UITableView()
     let emojiCollection = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
     let colorCollection = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
     weak var delegate: TrackerSettingsViewControllerDelegate?
@@ -30,7 +30,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
     private var selectedWeekdays: [Weekday]?
     private var selectedColors: String?
     private var selectedEmoji: String?
-    private var chosenCategoryName: String? = "Радостные мелочи"
+    private var chosenCategoryName: String?
     private var selectedColor: UIColor?
     private let textField = UITextField()
     private let button = UIButton()
@@ -44,6 +44,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
     func setWeekdays(weekdays: [Weekday]) {
         selectedWeekdays = weekdays
         updateCreateButtonState()
+        tableView.reloadData()
     }
     
     override func viewDidLoad() {
@@ -78,10 +79,6 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
     }
     
     private func makeCreateButton() -> UIButton {
-        guard let trackerType else {
-            assertionFailure("no tracker type")
-            return button
-        }
         button.addTarget(self, action: #selector(self.didTapCreateButton), for: .touchUpInside)
         button.setTitle("Создать", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
@@ -107,12 +104,11 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
     }
     
     private func makeTableView() -> UITableView {
-        let tableView = UITableView()
         tableView.dataSource = self
         tableView.delegate = self
         tableView.isScrollEnabled = false
         tableView.allowsMultipleSelection = false
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.register(TableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.layer.cornerRadius = 16
         tableView.heightAnchor.constraint(equalToConstant: trackerType == TrackerTypes.habit ? 149 : 74).isActive = true
@@ -145,16 +141,17 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             assertionFailure("no tracekr type")
             return
         }
-        var category: TrackerCategoryCD? = nil
         
         let context = PersistenceController.shared.context
         
-        if let categoryName = chosenCategoryName, !categoryName.isEmpty {
-            category = CoreDataService.shared.fetchCategory(byName: categoryName, context: context)
-            
-            if category == nil {
-                category = CoreDataService.shared.createCategory(byName: categoryName, context: context)
-            }
+        guard let categoryName = chosenCategoryName else {
+            print("Category name is empty")
+            return
+        }
+    
+        guard let category = CoreDataService.shared.fetchCategory(byName: categoryName, context: context) else {
+            print("Категория не найдена")
+            return
         }
         let date = Date()
         if trackerType == TrackerTypes.notRegular {
@@ -165,9 +162,8 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             trackerCD.emoji = selectedEmoji
             trackerCD.calendar = nil
             trackerCD.date = date
-            if let category = category {
-                trackerCD.category = category
-            }
+            trackerCD.category = category
+            
         
             do {
                 try context.save()
@@ -176,8 +172,8 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
                 print("[TrackerSettingsViewController]: Ошибка сохранения в CD \(error)")
                 return
             }
-            let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: "❤️", calendar: nil, date: date)
-            delegate?.addTracker(category: "Радостные мелочи", tracker: tracker)
+            let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: selectedEmoji ?? "", calendar: nil, date: date)
+            delegate?.addTracker(category: categoryName, tracker: tracker)
             return
         }
         guard let selectedWeekdays else {
@@ -197,10 +193,8 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         trackerCD.emoji = selectedEmoji
         trackerCD.calendar = calendarData as NSData
         trackerCD.date = nil
+        trackerCD.category = category
         
-        if let category = category {
-            trackerCD.category = category
-        }
     
         do {
             try context.save()
@@ -211,7 +205,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         }
         
         let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: selectedEmoji ?? "", calendar: selectedWeekdays, date: nil)
-        delegate?.addTracker(category: "Радостные мелочи", tracker: tracker)
+        delegate?.addTracker(category: categoryName, tracker: tracker)
     }
     
     private func setupClearButton() {
@@ -235,11 +229,13 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             isFormValid = !(textField.text?.isEmpty ?? true) &&
             selectedWeekdays != nil &&
             selectedEmoji != nil &&
-            selectedColor != nil
+            selectedColor != nil &&
+            chosenCategoryName != nil
         } else {
             isFormValid = !(textField.text?.isEmpty ?? true) &&
             selectedEmoji != nil &&
-            selectedColor != nil
+            selectedColor != nil &&
+            chosenCategoryName != nil
         }
         
         if isFormValid {
@@ -375,21 +371,41 @@ extension TrackerSettingsViewController: UITableViewDataSource {
         let image = UIImageView(image: .arrow)
         image.translatesAutoresizingMaskIntoConstraints = false
         
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") as? TableViewCell else {
             return UITableViewCell()
         }
-        cell.selectionStyle = .none
-        cell.contentView.backgroundColor = .systemGray6
-        cell.contentView.addSubview(image)
-        cell.textLabel?.text = indexPath.row == 0 ? "Категория" : "Расписание"
-        cell.separatorInset = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+        if indexPath.row == 0 {
+            if let chosenCategoryName {
+                cell.changeCategoryOrWeekdayLabel(categories: chosenCategoryName)
+            }
+            cell.titleLabel.text = "Категория"
+        } else {
+            if let selectedWeekdays {
+                let selectedDaysString = selectedWeekdays.map { day in
+                    switch day {
+                    case .monday:
+                        return("Пн")
+                    case .tuesday:
+                        return("Вт")
+                    case .wednesday:
+                        return("Ср")
+                    case .thursday:
+                        return("Чт")
+                    case .friday:
+                        return("Пт")
+                    case .saturday:
+                        return("Сб")
+                    case .sunday:
+                        return("Вс")
+                    }
+                }.joined(separator: ", ")
+                cell.changeCategoryOrWeekdayLabel(categories: selectedDaysString)
+            }
+            cell.titleLabel.text = "Расписание"
+        }
+
         
-        NSLayoutConstraint.activate([
-            image.heightAnchor.constraint(equalToConstant: 24),
-            image.widthAnchor.constraint(equalToConstant: 24),
-            image.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -16),
-            image.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
-        ])
+        
         return cell
     }
 }
@@ -405,8 +421,20 @@ extension TrackerSettingsViewController: UITableViewDelegate {
             scheduleViewController.delegate = self
             present(scheduleViewController, animated: true)
         }
+        if indexPath.row == 0 {
+            let categoryViewController = CategoryViewController(delegate: self, selectedCategory: chosenCategoryName, viewModel: CategoryViewModel())
+            present(categoryViewController, animated: true)
+        }
     }
     
+}
+
+extension TrackerSettingsViewController: CategoryViewControllerDelegate {
+    func didSelect(category: String) {
+        chosenCategoryName = category
+        updateCreateButtonState()
+        tableView.reloadData()
+    }
 }
 
 extension TrackerSettingsViewController: UICollectionViewDataSource {
@@ -554,5 +582,75 @@ extension TrackerSettingsViewController: UICollectionViewDelegateFlowLayout {
         }
         updateCreateButtonState()
         collectionView.reloadData()
+    }
+}
+
+final class TableViewCell: UITableViewCell {
+    
+    private var titleLabelTopConstraint: NSLayoutConstraint?
+    private var titleLabelCenterYConstraint: NSLayoutConstraint?
+    let image = UIImageView(image: .arrow)
+    
+    lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .black
+        label.font = .systemFont(ofSize: 17)
+        return label
+    }()
+    
+    lazy var categoryOrWeekdayLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .gray
+        label.font = .systemFont(ofSize: 17)
+        return label
+    }()
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.setUpUI()
+    }
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
+    
+    private func updateTitleLabelConstraints() {
+        if let text = categoryOrWeekdayLabel.text, !text.isEmpty {
+            titleLabelCenterYConstraint?.isActive = false
+            titleLabelTopConstraint?.isActive = true
+        } else {
+            titleLabelTopConstraint?.isActive = false
+            titleLabelCenterYConstraint?.isActive = true
+            
+        }
+        setNeedsLayout()
+    }
+    func changeCategoryOrWeekdayLabel(categories: String) {
+        categoryOrWeekdayLabel.text = categories
+        updateTitleLabelConstraints()
+    }
+    
+    func setUpUI() {
+        selectionStyle = .none
+        backgroundColor = .systemGray6
+        [titleLabel, categoryOrWeekdayLabel, image].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            addSubview($0)
+        }
+        
+        titleLabelTopConstraint = titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: 15)
+        titleLabelCenterYConstraint = titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
+        titleLabelTopConstraint?.isActive = true
+        titleLabelCenterYConstraint?.isActive = true
+        
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            categoryOrWeekdayLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            categoryOrWeekdayLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -14),
+            image.heightAnchor.constraint(equalToConstant: 24),
+            image.widthAnchor.constraint(equalToConstant: 24),
+            image.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            image.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
+        updateTitleLabelConstraints()
     }
 }
