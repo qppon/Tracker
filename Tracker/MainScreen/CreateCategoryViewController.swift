@@ -102,7 +102,10 @@ final class CreateCategoryViewController: UIViewController, UITextFieldDelegate 
         }
         dismiss(animated: true)
     }
-    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
     private func addTapGestureToHideKeyboard() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapGesture))
         view.addGestureRecognizer(tapGesture)

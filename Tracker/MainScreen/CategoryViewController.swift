@@ -84,10 +84,8 @@ final class CategoryViewController: UIViewController {
     
     private func bind() {
         viewModel.categoriesChanged = {[weak self] categories in
-            guard let self = self else {
-                return}
-            tableView.reloadData()
-            setUpPlaceholder()
+            self?.tableView.reloadData()
+            self?.setUpPlaceholder()
         }
     }
     

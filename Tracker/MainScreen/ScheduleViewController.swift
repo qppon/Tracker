@@ -102,6 +102,7 @@ extension ScheduleViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let switchView = UISwitch()
+        switchView.onTintColor = .ypBlue
         switchView.translatesAutoresizingMaskIntoConstraints = false
         switchView.addTarget(self, action: #selector(didSwitch(_:)), for: .valueChanged)
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") else {

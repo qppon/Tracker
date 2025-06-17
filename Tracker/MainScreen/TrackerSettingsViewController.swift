@@ -589,7 +589,7 @@ final class TableViewCell: UITableViewCell {
     
     private var titleLabelTopConstraint: NSLayoutConstraint?
     private var titleLabelCenterYConstraint: NSLayoutConstraint?
-    let image = UIImageView(image: .arrow)
+    private let image = UIImageView(image: .arrow)
     
     lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -629,7 +629,7 @@ final class TableViewCell: UITableViewCell {
         updateTitleLabelConstraints()
     }
     
-    func setUpUI() {
+    private func setUpUI() {
         selectionStyle = .none
         backgroundColor = .systemGray6
         [titleLabel, categoryOrWeekdayLabel, image].forEach {

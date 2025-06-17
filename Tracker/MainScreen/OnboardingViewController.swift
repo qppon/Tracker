@@ -7,11 +7,11 @@
 
 import UIKit
 
-class OnboardingViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+final class OnboardingViewController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate {
     
     var onFinish: (() -> Void)?
     
-    lazy var pages: [UIViewController] = {
+    private lazy var pages: [UIViewController] = {
         let red = PageViewContrtoller(pageType: PageType.red)
         let blue = PageViewContrtoller(pageType: PageType.blue)
 
@@ -20,7 +20,7 @@ class OnboardingViewController: UIPageViewController, UIPageViewControllerDataSo
         return [blue, red]
     }()
 
-    lazy var pageControl: UIPageControl = {
+    private lazy var pageControl: UIPageControl = {
         let pc = UIPageControl()
         pc.currentPageIndicatorTintColor = .forText
         pc.pageIndicatorTintColor = UIColor.forText.withAlphaComponent(0.3)
