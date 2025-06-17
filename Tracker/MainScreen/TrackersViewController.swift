@@ -14,7 +14,7 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
     var currentDate = Date()
     
     private var trackerStore: TrackerStore!
-    
+    private let searchBar = UISearchBar()
     private var categories: [TrackerCategory] = []
     private var visibleCategories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
@@ -139,12 +139,22 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
     }
     
     private func makeSearchBar() -> UISearchBar {
-        let searchBar = UISearchBar()
+
         searchBar.placeholder = "Поиск"
         searchBar.searchBarStyle = .minimal
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         
         return searchBar
+    }
+    
+    private func addTapGestureToHideKeyboard() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapGesture))
+        view.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc
+    func tapGesture() {
+        searchBar.resignFirstResponder()
     }
     
     private func makePlaceHolderImage() -> UIImageView {
@@ -186,6 +196,7 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
         let searchBar = makeSearchBar()
         let placeHolderImage = makePlaceHolderImage()
         let placeHolderLabel = makePlaceHolderLabel()
+        addTapGestureToHideKeyboard()
         
         
         collection.translatesAutoresizingMaskIntoConstraints = false
@@ -265,7 +276,9 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
                     }
                 }
             }
-            visibleCategories.append(TrackerCategory(category: category.category, trackers: newTrackers))
+            if !newTrackers.isEmpty {
+                visibleCategories.append(TrackerCategory(category: category.category, trackers: newTrackers))
+            }
         }
         if visibleCategories.isEmpty {
             collection.isHidden = true

@@ -103,7 +103,18 @@ final class CreateCategoryViewController: UIViewController, UITextFieldDelegate 
         dismiss(animated: true)
     }
     
+    private func addTapGestureToHideKeyboard() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapGesture))
+        view.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc
+    private func tapGesture() {
+        textField.resignFirstResponder()
+    }
+    
     private func setUpUI() {
+        addTapGestureToHideKeyboard()
         textField.delegate = self
         view.backgroundColor = .systemBackground
         titleLabel.text = (category != nil) ? "Редактировать категорию" : "Новая категория"
