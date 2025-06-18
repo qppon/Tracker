@@ -14,7 +14,7 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
     var currentDate = Date()
     
     private var trackerStore: TrackerStore!
-    
+    private let searchBar = UISearchBar()
     private var categories: [TrackerCategory] = []
     private var visibleCategories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
@@ -139,12 +139,22 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
     }
     
     private func makeSearchBar() -> UISearchBar {
-        let searchBar = UISearchBar()
+
         searchBar.placeholder = "Поиск"
         searchBar.searchBarStyle = .minimal
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         
         return searchBar
+    }
+    
+    private func addTapGestureToHideKeyboard() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapGesture))
+        view.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc
+    func tapGesture() {
+        searchBar.resignFirstResponder()
     }
     
     private func makePlaceHolderImage() -> UIImageView {
@@ -166,6 +176,7 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
     private func makeDatePicker() -> UIDatePicker {
         datePicker.preferredDatePickerStyle = .compact
         datePicker.datePickerMode = .date
+        datePicker.date = Date()
         datePicker.addTarget(self, action: #selector(datePickerValueChanged(_:)), for: .valueChanged)
         return datePicker
     }
@@ -185,6 +196,7 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
         let searchBar = makeSearchBar()
         let placeHolderImage = makePlaceHolderImage()
         let placeHolderLabel = makePlaceHolderLabel()
+        addTapGestureToHideKeyboard()
         
         
         collection.translatesAutoresizingMaskIntoConstraints = false
@@ -238,42 +250,45 @@ final class TrackersViewController: UIViewController, TrackerSettingsViewControl
     private func setVisibleTrackers() {
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: currentDate) - 1
-        var newTrackers: [Tracker] = []
+        visibleCategories = []
         if categories.isEmpty {
             return
         }
-        
-        for tracker in categories[0].trackers {
-            if !(tracker.calendar?.isEmpty ?? true) {
-                if let trackerCalendar = tracker.calendar {
-                    for trackerWeekday in trackerCalendar {
-                        if weekdays.firstIndex(of: trackerWeekday.rawValue) ?? 0 == weekday {
-                            newTrackers.append(tracker)
+        for category in categories {
+            var newTrackers: [Tracker] = []
+            for tracker in category.trackers {
+                if !(tracker.calendar?.isEmpty ?? true) {
+                    if let trackerCalendar = tracker.calendar {
+                        for trackerWeekday in trackerCalendar {
+                            if weekdays.firstIndex(of: trackerWeekday.rawValue) ?? 0 == weekday {
+                                newTrackers.append(tracker)
+                            }
                         }
                     }
                 }
-            }
-            else {
-                guard let trackerDate = tracker.date else {
-                    assertionFailure("no tracker date")
-                    return
+                else {
+                    guard let trackerDate = tracker.date else {
+                        assertionFailure("no tracker date")
+                        return
+                    }
+                    if calendar.compare(trackerDate, to: currentDate, toGranularity: .day) == .orderedSame {
+                        newTrackers.append(tracker)
+                    }
                 }
-                if calendar.compare(trackerDate, to: currentDate, toGranularity: .day) == .orderedSame {
-                    newTrackers.append(tracker)
-                }
             }
-            
+            if !newTrackers.isEmpty {
+                visibleCategories.append(TrackerCategory(category: category.category, trackers: newTrackers))
+            }
         }
-        if newTrackers.isEmpty {
+        if visibleCategories.isEmpty {
             collection.isHidden = true
             return
-        } else {
-            visibleCategories = [TrackerCategory(category: categories[0].category, trackers: newTrackers)]
-            collection.isHidden = false
-            collection.reloadData()
         }
+        collection.isHidden = false
+        collection.reloadData()
     }
 }
+
 
 extension TrackersViewController: UICollectionViewDataSource, TrackerCellDelegate {
     
@@ -292,15 +307,17 @@ extension TrackersViewController: UICollectionViewDataSource, TrackerCellDelegat
         if visibleCategories.isEmpty {
             return 0
         }
-        return visibleCategories[0].trackers.count
+        return visibleCategories[section].trackers.count
     }
-    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        visibleCategories.count
+    }
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? TrackerCell else {
             print("трекер не найден")
             return UICollectionViewCell()
         }
-        let tracker = visibleCategories[0].trackers[indexPath.row]
+        let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
         let isComplted = isTrackerCompleted(trackerId: tracker.id)
         cell.isComplted = isComplted
         cell.delegate = self
@@ -352,16 +369,16 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
         guard let view = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "header", for: indexPath) as? SupplementaryView else {
             return UICollectionReusableView()
         }
-        view.titleLabel.text = "Домашний уют"
+        view.titleLabel.text = categories[indexPath.section].category
         return view
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 167, height: 148)
+        return CGSize(width: (view.frame.width - 42) / 2, height: 148)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
+        return UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
