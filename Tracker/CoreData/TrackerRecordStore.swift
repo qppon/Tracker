@@ -47,8 +47,8 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         return fetchedResultsController.fetchedObjects ?? []
     }
     
-    func fetchRecords(forTracker tracker: TrackerCD) -> [TrackerRecordCD] {
-        return fetchedResultsController.fetchedObjects?.filter { $0.trackerID == tracker } ?? []
+    func countRecords(forTracker tracker: Tracker) -> Int {
+        completedTrackers.count(where: {$0.id == tracker.id})
     }
     
     func saveRecord(forTracker trackerId: UUID, onDate date: Date) {

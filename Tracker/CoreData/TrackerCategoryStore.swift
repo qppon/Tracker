@@ -51,6 +51,11 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
             print("[TrackerCategoryStore]: ошибка в deleteCategory")
             return
         }
+        if let trackers = trackerCategory.trackers as? Set<TrackerCD> {
+            trackers.forEach {
+                context.delete($0)
+            }
+        }
         context.delete(trackerCategory)
         saveContext()
     }

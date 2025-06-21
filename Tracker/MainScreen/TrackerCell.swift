@@ -18,6 +18,15 @@ final class TrackerCell: UICollectionViewCell {
     let textLabel = UILabel()
     let daysLabel = UILabel()
     let doneButton = UIButton()
+    let colors = Colors()
+    
+    let pinImageView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(named: "pin"))
+        imageView.tintColor = .white
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isHidden = true
+        return imageView
+    }()
     
     weak var delegate: TrackerCellDelegate?
     
@@ -48,7 +57,7 @@ final class TrackerCell: UICollectionViewCell {
         
         daysLabel.translatesAutoresizingMaskIntoConstraints = false
         daysLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        daysLabel.textColor = UIColor(resource: .black)
+        daysLabel.textColor = colors.labelColor
         
         
         doneButton.translatesAutoresizingMaskIntoConstraints = false
@@ -56,7 +65,8 @@ final class TrackerCell: UICollectionViewCell {
         doneButton.addTarget(self, action: #selector(didTapDoneButton), for: .touchUpInside)
         
         circleView.addSubview(emojiLabel)
-        contentView.addSubviews([cardView, circleView, textLabel, daysLabel, doneButton])
+        contentView.addSubviews([cardView, daysLabel, doneButton])
+        cardView.addSubviews([circleView, textLabel, pinImageView])
         
         NSLayoutConstraint.activate([
             cardView.topAnchor.constraint(equalTo: contentView.topAnchor),
@@ -82,7 +92,12 @@ final class TrackerCell: UICollectionViewCell {
             doneButton.topAnchor.constraint(equalTo: cardView.bottomAnchor, constant: 8),
             doneButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
             doneButton.heightAnchor.constraint(equalToConstant: 34),
-            doneButton.widthAnchor.constraint(equalToConstant: 34)
+            doneButton.widthAnchor.constraint(equalToConstant: 34),
+            
+            pinImageView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 18),
+            pinImageView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
+            pinImageView.widthAnchor.constraint(equalToConstant: 8),
+            pinImageView.heightAnchor.constraint(equalToConstant:12)
         ])
     }
     
@@ -90,21 +105,17 @@ final class TrackerCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    
     @objc
     private func didTapDoneButton() {
         guard isCompletable,
         let id else {
             return
         }
-        
-        
-        
         isComplted = !isComplted
         let newButtonImage = isComplted ? UIImage(resource: .done) : UIImage(resource: .addTracker)
-        doneButton.setImage(newButtonImage.withTintColor(.white), for: .normal)
+        doneButton.setImage(newButtonImage, for: .normal)
         doneButton.alpha = isComplted ? 0.3 : 1
         delegate?.didTapDoneButton(isCompleted: isComplted, trackerId: id)
-        
     }
-    
 }

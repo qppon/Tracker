@@ -14,8 +14,8 @@
             filePath = "Tracker/MainScreen/TrackerSettingsViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "160"
-            endingLineNumber = "160"
+            startingLineNumber = "168"
+            endingLineNumber = "168"
             landmarkName = "didTapCreateButton()"
             landmarkType = "7">
          </BreakpointContent>

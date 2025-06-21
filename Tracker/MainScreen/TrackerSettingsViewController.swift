@@ -9,6 +9,7 @@ import UIKit
 
 protocol TrackerSettingsViewControllerDelegate: AnyObject {
     func addTracker(category: String, tracker: Tracker)
+    func deleteTracker(tracker: Tracker)
 }
 
 enum TrackerTypes: String {
@@ -18,13 +19,16 @@ enum TrackerTypes: String {
 
 final class TrackerSettingsViewController: UIViewController, ScheduleViewControllerDelegate, UITextFieldDelegate {
     
-    
     let tableView = UITableView()
     let emojiCollection = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
     let colorCollection = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
     weak var delegate: TrackerSettingsViewControllerDelegate?
     var trackerType: TrackerTypes?
+    var tracker: Tracker?
     
+    private var isPined: Bool?
+    private var id: UUID?
+    private var trackerDate: Date?
     private var selectedEmojiIndex: IndexPath?
     private var selectedColorIndex: IndexPath?
     private var selectedWeekdays: [Weekday]?
@@ -50,6 +54,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
     override func viewDidLoad() {
         super.viewDidLoad()
         setUp()
+        updateCreateButtonState()
     }
     
     private func makeTitleLabel(text: String) -> UILabel {
@@ -153,16 +158,20 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             print("Категория не найдена")
             return
         }
+        if let tracker {
+            delegate?.deleteTracker(tracker: tracker)
+        }
         let date = Date()
         if trackerType == TrackerTypes.notRegular {
             let trackerCD = TrackerCD(context: context)
-            trackerCD.id = UUID()
+            trackerCD.id = id ?? UUID()
             trackerCD.name = textField.text ?? ""
             trackerCD.color = selectedColors
             trackerCD.emoji = selectedEmoji
             trackerCD.calendar = nil
-            trackerCD.date = date
+            trackerCD.date = trackerDate ?? date
             trackerCD.category = category
+            trackerCD.isPined = isPined ?? false
             
         
             do {
@@ -172,7 +181,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
                 print("[TrackerSettingsViewController]: Ошибка сохранения в CD \(error)")
                 return
             }
-            let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: selectedEmoji ?? "", calendar: nil, date: date)
+            let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: selectedEmoji ?? "", calendar: nil, date: trackerDate ?? date, isPined: isPined ?? false, category: categoryName)
             delegate?.addTracker(category: categoryName, tracker: tracker)
             return
         }
@@ -187,13 +196,14 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         }
         
         let trackerCD = TrackerCD(context: context)
-        trackerCD.id = UUID()
+        trackerCD.id = id ?? UUID()
         trackerCD.name = textField.text ?? ""
         trackerCD.color = selectedColors
         trackerCD.emoji = selectedEmoji
         trackerCD.calendar = calendarData as NSData
         trackerCD.date = nil
         trackerCD.category = category
+        trackerCD.isPined = isPined ?? false
         
     
         do {
@@ -204,7 +214,7 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
             return
         }
         
-        let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: selectedEmoji ?? "", calendar: selectedWeekdays, date: nil)
+        let tracker = Tracker(id: trackerCD.id ?? UUID(), name: textField.text ?? "", color: selectedColor ?? .colorSelection1, emoji: selectedEmoji ?? "", calendar: selectedWeekdays, date: nil, isPined: isPined ?? false, category: categoryName)
         delegate?.addTracker(category: categoryName, tracker: tracker)
     }
     
@@ -263,6 +273,23 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         return colorCollection
     }
     
+    private lazy var daysLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .black
+        if let tracker {
+            let numberOfDays = TrackerRecordStore.shared.countRecords(forTracker: tracker)
+            let format = NSLocalizedString("days.count", comment: "")
+            label.text = String.localizedStringWithFormat(format, numberOfDays)
+        }
+        label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.setContentHuggingPriority(.required, for: .vertical)
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
+        label.isHidden = false
+        return label
+    }()
+    
     @objc
     private func didTapCancelButton() {
         self.dismiss(animated: true)
@@ -291,6 +318,42 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         let emojiCollection = makeEmojiCollection()
         let emojiLabel = makeEmojiLabel()
         let colorLabel = makeColorLabel()
+        
+        if let trackerType {
+            if trackerType == .habit {
+                if tracker != nil {
+                    label.text = "редактирование привычки"
+                } else {
+                    label.text = trackerType.rawValue
+                }
+            } else {
+                if tracker != nil {
+                    label.text = "Редактирование нерегулярного события"
+                } else {
+                    label.text = trackerType.rawValue
+                }
+            }
+        }
+        
+        if let tracker {
+            createButton.setTitle("Сохранить", for: .normal)
+            chosenCategoryName = tracker.category
+            selectedEmoji = tracker.emoji
+            selectedColor = tracker.color
+            textField.text = tracker.name
+            selectedWeekdays = tracker.calendar
+            self.id = tracker.id
+            isPined = tracker.isPined
+            trackerDate = tracker.date
+            if let selectedColor = selectedColor, let selectedEmoji {
+                if let colorIndex = colors.firstIndex(where: {$0.toHex() == selectedColor.toHex()}),
+                   let emojiIndex = emojies.firstIndex(of: selectedEmoji) {
+                    selectedColorIndex = IndexPath(row: colorIndex, section: 0)
+                    selectedEmojiIndex = IndexPath(row: emojiIndex, section: 0)
+                }
+            }
+        }
+        
         emojiCollection.translatesAutoresizingMaskIntoConstraints = false
         
         let colorCollection = makeColorCollection()
@@ -305,16 +368,32 @@ final class TrackerSettingsViewController: UIViewController, ScheduleViewControl
         scrollView.addSubview(contentView)
         
         
-        contentView.addSubviews([label, textField, tableView, emojiLabel, colorLabel, emojiCollection, colorCollection, cancelButton, createButton])
+        contentView.addSubviews([label, textField, tableView, emojiLabel, colorLabel, emojiCollection, colorCollection, cancelButton, createButton, daysLabel])
+        
+        if tracker != nil {
+            daysLabel.isHidden = false
+            NSLayoutConstraint.activate([
+                textField.topAnchor.constraint(equalTo: daysLabel.bottomAnchor, constant: 38),
+                textField.heightAnchor.constraint(equalToConstant: 75),
+                textField.widthAnchor.constraint(equalToConstant: view.frame.width - 32),
+                textField.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            ])
+        } else {
+            daysLabel.isHidden = true
+            NSLayoutConstraint.activate([
+                textField.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 38),
+                textField.heightAnchor.constraint(equalToConstant: 75),
+                textField.widthAnchor.constraint(equalToConstant: view.frame.width - 32),
+                textField.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            ])
+        }
         
         NSLayoutConstraint.activate([
             label.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 34),
             label.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
-            textField.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 38),
-            textField.heightAnchor.constraint(equalToConstant: 75),
-            textField.widthAnchor.constraint(equalToConstant: view.frame.width - 32),
-            textField.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            daysLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            daysLabel.topAnchor.constraint(equalTo: label.topAnchor, constant: 38),
             
             tableView.topAnchor.constraint(equalTo: textField.bottomAnchor, constant: 24),
             tableView.widthAnchor.constraint(equalToConstant: view.frame.width - 32),
