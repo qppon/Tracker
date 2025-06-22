@@ -1,0 +1,12 @@
+/* 
+  Localizable.strings
+  Tracker
+
+  Created by Jojo Smith on 6/18/25.
+  
+*/
+
+"trecers.title" = "Трекеры";
+"tapbar.title" = "Статистика";
+"filtrs" = "Фильтры";
+

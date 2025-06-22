@@ -57,8 +57,34 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         saveContext()
     }
     
-    func deleteTracker(tracker: TrackerCD) {
-        context.delete(tracker)
+    func togleIsPined(trackerID: UUID) {
+        let fetchRequest: NSFetchRequest<TrackerCD> = TrackerCD.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", trackerID as CVarArg)
+        do {
+            let tracker = try context.fetch(fetchRequest)
+            if let trackerCD = tracker.first {
+                trackerCD.isPined.toggle()
+            }
+        } catch {
+            print("ошибка при закреплении или откреплении трекера")
+            return
+        }
+        saveContext()
+    }
+    
+    func deleteTracker(trackerID: UUID) {
+        let fetchRequest: NSFetchRequest<TrackerCD> = TrackerCD.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", trackerID as CVarArg)
+        do {
+            let tracker = try context.fetch(fetchRequest)
+            if let trackerCD = tracker.first {
+                context.delete(trackerCD)
+            }
+        } catch {
+            print("ошибка при удалении трекера")
+            return
+        }
+        
         saveContext()
     }
     

@@ -57,7 +57,7 @@ final class MakeTrackerViewController: UIViewController {
         button.setTitle(text, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.titleLabel?.textColor = .white
-        button.backgroundColor = UIColor(resource: .black)
+        button.backgroundColor = UIColor(resource: .ypBlack)
         button.layer.cornerRadius = 16
         
         if text == "Привычка" {
